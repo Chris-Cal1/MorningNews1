@@ -1,7 +1,7 @@
 import React, { useState, useEffect}  from 'react';
 import {Link} from 'react-router-dom';
 import '../App.css';
-import { Card,} from 'antd';
+import { Card, Modal} from 'antd';
 import Nav from './Nav'
 import Icon, { PropertySafetyFilled } from '@ant-design/icons';
 import {connect} from 'react-redux';
@@ -11,27 +11,52 @@ const { Meta } = Card;
 
 function ScreenMyArticles(props) {
 
-  const [wishList, setWishList] = useState([])
+  const [visible, setVisible] = useState(false)
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [langFiltre, setLangFiltre] = useState('')
 
   useEffect(() => {
-    
-      const loadMovies = async () => {
-       
-        const responseWish = await fetch('/wishlist-articles');
-          const jsonResponseWish = await responseWish.json();
-          
-          const wishListFromDB = jsonResponseWish.articles.map((article,i) => {
-            return {title:article.title,image:article.image, content: article.content  }
-          })
-          //(11.2)
-          setWishList(wishListFromDB)
-          
-         
-     }
-     loadMovies()
-     // console.log("App is loaded"); 
-    }, []);
+    const findArticlesWishList = async () => {
+      const dataWishlist = await fetch(`/wishlist-article?lang=${langFiltre}&token=${props.token}`)
+      const body = await dataWishlist.json()
 
+      props.saveArticles(body.articles)
+    }
+
+    findArticlesWishList()
+  },[langFiltre])
+
+    const handleClickDeleteArticle = async title => {
+      props.deleteToWishList(title)
+
+    const response = await fetch('/wishlist-artilce', {
+     method: 'DELETE',
+     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+     body: `title=${title}&token=${props.token}`
+    });
+ }
+
+   var filtreLang = (lang) => {
+     setLangFiltre(lang)
+    }
+
+   var showModal = (title, content) => {
+     setVisible(true)
+     setTitle(title)
+    setContent(content)
+
+  }
+
+  var handleOk = e => {
+    console.log(e)
+    setVisible(false)
+}
+
+  var handleCancel = e => {
+    console.log(e)
+    setVisible(false)
+ }
 
   // Bonus, faire en sorte d'afficher "No articles" si il n'y a pas d'article
   var noArticles
@@ -39,13 +64,7 @@ function ScreenMyArticles(props) {
     noArticles = <div style={{marginTop:"30px"}}>No articles</div>
   }
 
-  const handleClickDeleteArticle = async articleTitle => {
-    props.deleteToWishList(articleTitle)
-   //var article = props.deleteToWishList(article.title)
-    const response = await fetch(`/wishlist-artilce/${articleTitle}`, {
-    method: 'DELETE',
-   });
-}
+  
 
 
   return (
@@ -55,8 +74,11 @@ function ScreenMyArticles(props) {
          
             <Nav/>
 
-            <div className="Banner"/>
-
+            <div style={{display:'flex', justifyContent:'center', alignItems:'center'}} className="Banner">
+              <img style={{width:'40px', margin:'10px',cursor:'pointer'}} src='/images/fr.png' onClick={() => filtreLang('fr')} />
+              <img style={{width:'40px', margin:'10px',cursor:'pointer'}} src='/images/uk.png' onClick={() => filtreLang('en')} /> 
+            </div>
+             
             <div className="Card">
                 {noArticles}
              {props.Articles.map((article, i) => (
@@ -77,7 +99,7 @@ function ScreenMyArticles(props) {
                         }
                         
                         actions={[
-                          <ReadOutlined />,
+                          <ReadOutlined onClick={() => showModal(article.title,article.content)}/>,
                           <DeleteOutlined onClick={() => handleClickDeleteArticle(article)}/>
                         ]}
                         >
@@ -87,10 +109,15 @@ function ScreenMyArticles(props) {
                           description={article.description}
                         />
 
-
-                  
                       </Card>
-
+                      <Modal
+                         title={title}
+                         visible={visible}
+                         onOk={handleOk}
+                         onCancel={handleCancel}
+                      >
+                    <p>{title}</p>
+                    </Modal>
                         
                     </div>
 
@@ -110,7 +137,7 @@ function ScreenMyArticles(props) {
 function mapStateToProps(state) {
   //(3.14) on cible l’état qui correspond à la wishlist et on lui associe la valeur Articles
   return { 
-    Articles : state.wishlist
+    Articles : state.wishlist, token: state.token
    }
  
   };
@@ -124,14 +151,23 @@ function mapStateToProps(state) {
           type: 'deleteArticle',
           title: articleTitle
         })
-      }
+      },
+      saveArticles: function(articles){
+        dispatch({type: 'saveArticles',
+          articles: articles
+        })
     }
   }
+}
+ 
+ 
   
  //(3.19) Modification de l’export, pour appliquer nos functions au composant conteneur
   export default connect(
   mapStateToProps,
   mapDispatchToProps,
-  null
+  
+  
+  
   )
   (ScreenMyArticles);

@@ -13,6 +13,19 @@ function ScreenSource(props) {
 
 
   useEffect(() => {
+    const findLang = async() => {
+      
+      const reqFind = await fetch(`/user-lang?token=${props.token}`)
+      const resultFind = await reqFind.json()
+
+      setSelectedLang(resultFind.lang)
+    }
+
+    findLang()
+  }, [])
+
+
+  useEffect(() => {
     //(1.3) Mise en place de la mécanique permettant d'interroger l’URL de l'API.
     const APIResultsLoading = async() => {
 
@@ -23,7 +36,7 @@ function ScreenSource(props) {
         var langue = 'en'
         var country = 'us'
       }
-      props.changeLang(selectedLang)
+     // props.changeLang(selectedLang)
       const data = await fetch(`https://newsapi.org/v2/sources?language=${langue}&country=${country}&apiKey=29c72389097041eb95bfa58a3ef924eb`)
       const body = await data.json()
       //(1.4) Mise en place de la mécanique permettant de mettre à jour l’état sourceList avec la réponse reçue du webservice
@@ -34,6 +47,29 @@ function ScreenSource(props) {
   }, [selectedLang])
 
 
+  var updateLang = async (lang) => {
+    setSelectedLang(lang)
+
+    const reqLang = await fetch('/user-lang', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `lang=${lang}&token=${props.token}`
+    })
+  }
+
+  var styleBorderFr = {width:'40px', margin:'10px',cursor:'pointer'}
+
+  if(selectedLang == 'fr'){
+    styleBorderFr.border = '1px solid black'
+  }
+
+  var styleBorderEn = {width:'40px', margin:'10px',cursor:'pointer'}
+
+  if(selectedLang == 'en'){
+    styleBorderEn.border = '1px solid black'
+  }
+
+
    //(1.5)  Exploitation de l’état sourceList pour mettre à jour le composant afin qu’il matérialise visuellement les différentes sources d’informations
   // (1.6) Modification du lien pour y faire transiter l’ID de la source, ligne 43
   return (
@@ -41,8 +77,8 @@ function ScreenSource(props) {
         <Nav/>
        
        <div style={{display:'flex', justifyContent:'center', alignItems:'center'}} className="Banner">
-          <img style={{width:'40px', margin:'10px',cursor:'pointer'}} src='/images/fr.png' onClick={() => setSelectedLang('fr')} />
-          <img style={{width:'40px', margin:'10px',cursor:'pointer'}} src='/images/uk.png' onClick={() => setSelectedLang('en')} /> 
+          <img style={{width:'40px', margin:'10px',cursor:'pointer'}} src='/images/fr.png' onClick={() => updateLang('fr')} />
+          <img style={{width:'40px', margin:'10px',cursor:'pointer'}} src='/images/uk.png' onClick={() => updateLang('en')} /> 
         </div>
 
        <div className="HomeThemes">
@@ -69,7 +105,7 @@ function ScreenSource(props) {
 }
 
 function mapStateToProps(state){
-  return {selectedLang: state.selectedLang}
+  return {selectedLang: state.selectedLang, token: state.token}
 }
 
 function mapDispatchToProps(dispatch){
@@ -84,3 +120,4 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(ScreenSource)
+

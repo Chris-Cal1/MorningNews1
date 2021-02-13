@@ -20,6 +20,7 @@ router.post('/sign-up', async function(req, res, next){
   var error = []
   var result = false
   var userSave = null
+  var token = null
 
   const data = await userModel.findOne({
     email: req.body.email,
@@ -99,39 +100,93 @@ router.post('/sign-in', async function(req,res,next){
 
 })
 
-router.post('/wishlistArticle', async function(req, res, next) { 
+router.post('/wishlist-article', async function(req, res, next) { 
 
+  var result = false
+  var user = await userModel.findOne({token: req.body.token})
+
+    if(user != null){
          var newArticle = new articleModel({      
-            title: req.body.title,       
+            title: req.body.name, 
+            description: req.body.desc,
+            urlToImage: req.body.img,      
             content: req.body.content,       
-            image: req.body.image,           
+            lang: req.body.lang,
+            userId: user._id,          
           })        
           var articleSave = await newArticle.save()       
-           var result = false     
-           if(articleSave){       
+            
+           if(articleSave.name){       
              result = true     
-            }        
-            res.json({result, articleSave})   
+             }   
+           }    
+            res.json({result})   
           });
 
 // Suppression d'un film dans la db
-router.delete('/wishlist-artilce/:articleTitle', async function(req, res, next) {
-  
-  var returnDb = await articleModel.deleteOne({title: req.params.articleTitle})
+router.delete('/wishlist-artilce', async function(req, res, next) {
 
-  var result = false;
+  var result = false
+  var user = await userModel.findOne({token: req.body.token})
+
+  if(user != null){
+  var returnDb = await articleModel.deleteOne({title: req.body.title, userId: user._id})
+
+  
   if(returnDb.deletedCount == 1) {
-    result = true;
-  }
+    result = true; 
+   }
+}
   res.json({result});
 })
 
 router.get('/wishlist-articles', async function(req, res, next){
 
-  var articles = await articleModel.find()
+  var articles = []
+  var user = await userModel.findOne({token: req.body.token})
+
+  if(user != null){
+    if(req.query.lang!== ''){
+      articles = await articleModel.find({userId:user._id, lang: req.query.lang})
+    } else {
+      articles = await articleModel.find({userId:user._id})
+    }
+
+    
+  }
   
   res.json({articles})
 })
+
+router.get('/user-lang', async function(req, res, next){
+
+  var lang = null
+  var user = await userModel.findOne({token: req.body.token})
+
+  if(user != null){
+   lang = user.lang
+    
+  }
+  
+  res.json({lang})
+})
+
+router.post('/user-lang', async function(req, res, next){
+
+  var result = false
+ 
+  var user = await userModel.updateOne({token: req.body.token}, {lang: req.body.lang})
+
+  if(user != null){
+   result = true
+    
+  }
+  
+  res.json({result})
+})
+
+
+
 
 
 

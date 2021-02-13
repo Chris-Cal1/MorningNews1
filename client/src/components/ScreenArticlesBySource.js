@@ -23,9 +23,6 @@ function ScreenArticlesBySource(props) {
  
 
 
-    let { id } = useParams();
-   console.log(props.match.params.id)
-
   useEffect(() => {
     //(1.9) instruction permettant d’interroger l’URL précédemment trouvée
     const loadMyNews = async () => {
@@ -36,7 +33,6 @@ function ScreenArticlesBySource(props) {
       setArticleList(response.articles)
     }
    loadMyNews()
-   console.log("app loaded")
   }, []);
 
   var showModal = (title, content) => {
@@ -56,14 +52,14 @@ function ScreenArticlesBySource(props) {
     setVisible(false)
   }
 
-  var OnClickarticle = async article => {
+  var saveArticle = async article => {
     props.addToWishList(article)
-    console.log(article)
+    //console.log(article)
 
-    await fetch('/wishlistArticle', {
+   const saveReq = await fetch('/wishlist-article', {
       method: 'POST',
       headers: {'Content-Type':'application/x-www-form-urlencoded'},
-      body: `title=${article.title}&content=${article.content}&image=${article.urlToImage}`
+      body: `name=${article.title}&content=${article.content}&desc=${article.description}&lang=${props.selectedLang}&img=${article.urlToImage}&token=${props.token}`
      }); 
     }
     
@@ -103,7 +99,7 @@ function ScreenArticlesBySource(props) {
         actions={[
        
           <ReadOutlined onClick={ () => showModal(article.title, article.content)} />,
-          <LikeOutlined style={color} onClick={ () => OnClickarticle(article) }/> 
+          <LikeOutlined style={color} onClick={ () => saveArticle(article) }/> 
         ]}
         >
 
@@ -167,7 +163,9 @@ function ScreenArticlesBySource(props) {
 
    function mapStateToProps(state) {
     return { 
-      Articles : state.wishlist
+      token : state.token,
+      selectedLang: state.selectedLang,
+      Articles: state.wishlist
      }
    
     };

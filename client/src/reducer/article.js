@@ -2,9 +2,10 @@
 //(3.6) création de la fonction reducer qui permet de réagir à l’action “addArticle” envoyée précédemment.
 export default function(wishlist = [], action) {
 //(3.7) Mise en place dans cette fonction d'une mécanique permettant d’ajouter l’article reçu dans un état du store
-    if(action.type == 'addArticle') {
-        var wishListCopy = [...wishlist];
-
+    if(action.type == 'saveArticles'){
+      return action.articles
+    } else if(action.type == 'addArticle'){
+      var wishListCopy = [...wishlist]
 
         //Bonus: faire en sorte de ne pas mettre plusieurs fois les mêmes articles peut-importe le nombre de fois qu'on click sur le like
         var findArticles = false
